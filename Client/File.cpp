@@ -2,33 +2,23 @@
 #include <string>
 #include <sstream>
 #include <iostream>
+#include "Packet.h"
+
 using namespace std;
 
 
-struct TimeInfo
-{
-	int hour;
-	int minute;
-	int second;
-};
-
-struct FlightData
-{
-	int flightId;
-	TimeInfo timeStamp;
-	float fuelAmount;
-};
-
-FlightData* readFromFile(int flightId, string InputStr)
+FlightData readFromFile(int flightId, string InputStr)
 {
 	std::istringstream issLine(InputStr);
 	string dateTime;
 	string fuel;
 
+	Packet newPkt;
+	newPkt.SetFlightID(flightId);
+
 	if (getline(issLine, dateTime, ',') && getline(issLine, fuel, ','))
 	{
 		FlightData flightData;
-		flightData.flightId = flightId;
 
 		std::istringstream ss(dateTime);
 		string initalspace;
@@ -55,38 +45,12 @@ FlightData* readFromFile(int flightId, string InputStr)
 
 		flightData.fuelAmount = stof(fuel);
 
-		std::cout << flightData.flightId << " "
+		std::cout << flightId << " "
 			<< flightData.timeStamp.hour << ":" << flightData.timeStamp.minute << ":" << flightData.timeStamp.second << " "
 			<< flightData.fuelAmount << std::endl;
 
-		return &flightData;
+		return flightData;
 
 	}
 
 }
-
-int getFlightID()
-{
-	return 0;
-}
-//
-//int main()
-//{
-//	int flightId = getFlightID();
-//
-//	std::ifstream f("InputFile.txt");
-//	if (f.is_open())
-//	{
-//		std::string InputStr = "";
-//		getline(f, InputStr);  //gets first line
-//
-//		while (getline(f, InputStr))
-//		{
-//			FlightData* flightData = readFromFile(flightId, InputStr);
-//		}
-//	}
-//
-//	f.close();
-//
-//	return 1;
-//}
