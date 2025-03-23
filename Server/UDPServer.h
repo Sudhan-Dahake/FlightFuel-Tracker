@@ -4,6 +4,7 @@
 #include <atomic>
 #include <mutex>
 #include <windows.networking.sockets.h>
+#include <fstream>
 #include "Packet.h"
 
 #pragma comment(lib, "Ws2_32.lib")
@@ -33,6 +34,8 @@ class UDPServer {
 	std::unordered_map<int, std::vector<float>> flightConsumptions;
 
 	std::mutex sendMutex;
+
+	std::mutex fileMutex;
 
 
 	/*std::unordered_map<std::string, int> clientFlightIds;

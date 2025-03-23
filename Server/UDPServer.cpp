@@ -160,7 +160,32 @@ void UDPServer::HandlePacket(char* RxBuffer, sockaddr_in CltAddr, bool IsPacketV
 
 			float avg = sum / fuelConsumptionRates.size();
 
-			std::cout << "Flight ID: " << pkt.GetHeader().flightID << ", Average Fuel Consumption: " << avg << "\n";
+			std::string filename = "Avg_Fuel_Consumption_In_Flights.txt";
+			std::ofstream outFile;
+
+			{
+				std::lock_guard<std::mutex> lock(fileMutex);
+
+				// Check if file exists
+				std::ifstream checkFile(filename);
+				bool fileExists = checkFile.good();
+				checkFile.close();
+
+				// Open file in append mode
+				outFile.open(filename, std::ios::app);
+
+				if (!fileExists) {
+					// File didn't exist — write header
+					outFile << "FlightId\tAverage Fuel Consumption\n";
+				}
+
+				// Write result on a new line
+				outFile << pkt.GetHeader().flightID << "\t" << avg << "\n";
+
+				outFile.close();
+			}
+
+			/*std::cout << "Flight ID: " << pkt.GetHeader().flightID << ", Average Fuel Consumption: " << avg << "\n";*/
 		}
 
 		else {
