@@ -1,0 +1,5 @@
+﻿  Client.cpp
+  File.cpp
+  Generating Code...
+C:\Users\sudha\OneDrive - Conestoga College\Desktop\College\Semester 6\Project_6\Ciient_Server\Client\File.cpp(56,1): warning C4715: 'readFromFile': not all control paths return a value
+  Client.vcxproj -> C:\Users\sudha\OneDrive - Conestoga College\Desktop\College\Semester 6\Project_6\Ciient_Server\x64\Debug\Client.exe
