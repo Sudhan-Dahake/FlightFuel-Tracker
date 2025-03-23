@@ -1,16 +1,13 @@
 ﻿  Packet.cpp
   Server.cpp
+  Please define _WIN32_WINNT or _WIN32_WINDOWS appropriately. For example:
+  - add -D_WIN32_WINNT=0x0601 to the compiler command line; or
+  - add _WIN32_WINNT=0x0601 to your project's Preprocessor Definitions.
+  Assuming _WIN32_WINNT=0x0601 (i.e. Windows 7 target).
+  UDPServer.cpp
+  Please define _WIN32_WINNT or _WIN32_WINDOWS appropriately. For example:
+  - add -D_WIN32_WINNT=0x0601 to the compiler command line; or
+  - add _WIN32_WINNT=0x0601 to your project's Preprocessor Definitions.
+  Assuming _WIN32_WINNT=0x0601 (i.e. Windows 7 target).
   Generating Code...
-C:\Users\sudha\OneDrive - Conestoga College\Desktop\College\Semester 6\Project_6\Ciient_Server\Server\Server.cpp(48,28): error C2065: 'DataPacket': undeclared identifier
-C:\Users\sudha\OneDrive - Conestoga College\Desktop\College\Semester 6\Project_6\Ciient_Server\Server\Server.cpp(50,3): error C2065: 'cout': undeclared identifier
-C:\Users\sudha\OneDrive - Conestoga College\Desktop\College\Semester 6\Project_6\Ciient_Server\Server\Server.cpp(50,31): error C2039: 'PktNumber': is not a member of 'Packet'
-      C:\Users\sudha\OneDrive - Conestoga College\Desktop\College\Semester 6\Project_6\Ciient_Server\Server\Packet.h(22,7):
-      see declaration of 'Packet'
-  
-C:\Users\sudha\OneDrive - Conestoga College\Desktop\College\Semester 6\Project_6\Ciient_Server\Server\Server.cpp(50,62): error C2248: 'Packet::Data': cannot access private member declared in class 'Packet'
-      C:\Users\sudha\OneDrive - Conestoga College\Desktop\College\Semester 6\Project_6\Ciient_Server\Server\Packet.h(31,8):
-      see declaration of 'Packet::Data'
-      C:\Users\sudha\OneDrive - Conestoga College\Desktop\College\Semester 6\Project_6\Ciient_Server\Server\Packet.h(22,7):
-      see declaration of 'Packet'
-  
-C:\Users\sudha\OneDrive - Conestoga College\Desktop\College\Semester 6\Project_6\Ciient_Server\Server\Server.cpp(50,72): error C2065: 'endl': undeclared identifier
+  Server.vcxproj -> C:\Users\sudha\OneDrive - Conestoga College\Desktop\College\Semester 6\Project_6\Ciient_Server\x64\Debug\Server.exe

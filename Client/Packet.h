@@ -50,14 +50,21 @@ public:
 	Packet(char* src) //deserialize
 	{
 		memcpy(&Head, src, sizeof(Head));
-		memcpy(&Data, src + sizeof(Head), Head.Length);
-		memcpy(&CRC, src + sizeof(Head) + Head.Length, sizeof(CRC));
+
+		std::cout << "Confirmation Flag Inside Packet.h: " << Head.confirmationFlag << std::endl;
+
+		std::cout << "Finished Flag Inside Packet.h: " << Head.finishedFlag << std::endl;
+
+		if (this->Head.Length != 0) {
+			memcpy(&Data, src + sizeof(Head), Head.Length);
+			memcpy(&CRC, src + sizeof(Head) + Head.Length, sizeof(CRC));
+		};
 	}
 
 	void SetData(FlightData& srcData, int Size)
 	{
 		Data = srcData;
-		Head.Length = sizeof(FlightData);   //updating the header information
+		Head.Length = Size;   //updating the header information
 	};
 
 	char* SerializeData(int& TotalSize)
@@ -66,7 +73,14 @@ public:
 		if (TxBuffer)
 			delete[] TxBuffer;
 
+		std::cout << "Size of HEADER: " << sizeof(Header) << std::endl;
+		std::cout << "Size of Head: " << sizeof(Head) << std::endl;
+		std::cout << "Size of FlightData: " << sizeof(FlightData) << std::endl;
+		std::cout << "Size of CRC: " << sizeof(CRC) << std::endl;
+
 		TotalSize = sizeof(Head) + sizeof(FlightData) + sizeof(CRC);  //this is the full size of the packet (head + body + tail)
+
+		std::cout << TotalSize << " => This is the size of total size." << std::endl;
 
 		TxBuffer = new char[TotalSize];
 
@@ -99,4 +113,6 @@ public:
 	unsigned char GetFinishedFlag() { return Head.finishedFlag; }
 	// Set a default value of N (Not done) for the flag
 	void SetFinishedFlag(unsigned char status = 'N') { Head.finishedFlag = status; }
+
+	void SetBodyLengthInHeader(unsigned int bodyLength) { Head.Length = bodyLength; };
 };

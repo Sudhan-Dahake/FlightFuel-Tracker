@@ -18,16 +18,18 @@ struct FlightData
 	float fuelAmount;
 };
 
+struct Header
+{
+	unsigned int flightID;			//Line number of the input file being transmitted
+	unsigned int Length;					//Number of characters in the line
+	unsigned char confirmationFlag;  //P for pass, F for fail
+	unsigned char finishedFlag; //D for done, N for not done 
+};
+
 
 class Packet
 {
-	struct Header
-	{
-		unsigned int flightID;			//Line number of the input file being transmitted
-		unsigned int Length;					//Number of characters in the line
-		unsigned char confirmationFlag;  //P for pass, F for fail
-		unsigned char finishedFlag; //D for done, N for not done 
-	} Head;
+	Header Head;
 	
 	FlightData flightData;
 	
@@ -41,9 +43,19 @@ public:
 
 	Packet(char* src); //deserialize
 
-	void SendConfirmation(int flightId);
+	Header SendConfirmation(int flightId, char confirmationFlag);
 
 	char* SerializeData(int& TotalSize);
 
+	int GetFlightId();
+
+	Header GetHeader();
+
+	FlightData GetFlightData();
+
 	unsigned int CalculateCRC();
+
+	bool IsBodyPresent();
+
+	bool IsFinishedFlagSet();
 };

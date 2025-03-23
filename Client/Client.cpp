@@ -51,16 +51,19 @@ int main(int argc, char* argv[])
 	newPkt.SetFlightID(0);
 	newPkt.SetConfirmationFlag();  //the parameter has a default value of 'P'
 	newPkt.SetFinishedFlag();  // the parameter has a default value of 'N'
+	newPkt.SetBodyLengthInHeader(0);
 
 	FlightData data;
 	newPkt.SetData(data, 0);  // set the value of the data which is empty for the first initializer packet
 	int Size = 0;
 	char* Tx = newPkt.SerializeData(Size);  // serializing the packet to send it to the server
 
-
+	std::cout << "This is the size in main: " << Size << std::endl;
 	//Sending an empty packet to initialize the connection with the server
 	int send_result = sendto(ClientSocket, Tx, Size, 0,
 		(struct sockaddr*)&SvrAddr, sizeof(SvrAddr));
+
+	std::cout << "Send Result in Client: " << send_result << std::endl;
 
 	// if the return value of the 'sendto' function is -1, close the server socket and end the program
 	if (send_result == -1)
@@ -76,19 +79,27 @@ int main(int argc, char* argv[])
 	Packet receivedPkt;
 	int addrSize = sizeof(SvrAddr);
 
+	int flightId;
+
 	// Receive the data and deserialize it
 	int receivedBytes = recvfrom(ClientSocket, buffer, sizeof(buffer), 0, (struct sockaddr*)&SvrAddr, &addrSize);
 	if (receivedBytes >= 0) {
-		Packet receivedPkt(buffer);   // deserialize the packet
+		memcpy(&flightId, buffer, sizeof(int));
+
+		/*Packet receivedPkt(buffer);*/   // deserialize the packet
 	}
 
-	int flightId = receivedPkt.GetFlightID();  // saving the flight id for future use
+	/*int flightId = receivedPkt.GetFlightID();*/  // saving the flight id for future use
+
+	std::cout << "Flight Id in Client: " << flightId << std::endl;
 
 
 
 	// sending packets with the file data to the server
 	std::string fileName = argv[1];   // Getting the file name from the command line to make the solution dynamic
 	std::ifstream f(fileName);
+
+	std::cout << "This is the filename => " << fileName << std::endl;
 
 	// The flags to determine if the packet sent to the server was corrupted
 	char confirmation = 'P';
@@ -99,11 +110,25 @@ int main(int argc, char* argv[])
 		std::string InputStr = "";
 		getline(f, InputStr);  //gets first line
 
+		std::cout << "File opened" << std::endl;
+
 		while (getline(f, InputStr))  // loop until the end of the file
 		{
+			std::cout << "File read" << std::endl;
+
+			std::cout << "Confirmation Flag: " << confirmation << std::endl;
+
+			std::cout << "This is the input string: " << InputStr << std::endl;
+
 			if (confirmation == 'P')
 			{
 				FlightData flightData = readFromFile(flightId, InputStr);
+
+				std::cout << "Fuel Amount: " << flightData.fuelAmount << std::endl;
+
+				std::cout << "Time in Hours: " << flightData.timeStamp.hour << std::endl;
+				std::cout << "Time in Minutes: " << flightData.timeStamp.minute << std::endl;
+				std::cout << "Time in Seconds: " << flightData.timeStamp.second << std::endl;
 
 
 				// Setting the header information
@@ -111,15 +136,18 @@ int main(int argc, char* argv[])
 				newPkt.SetConfirmationFlag();
 				newPkt.SetFinishedFlag();
 
-				FlightData data;
-				newPkt.SetData(data, sizeof(data));
+				/*FlightData data;*/
+				newPkt.SetData(flightData, sizeof(flightData));
 				int Size = 0;
 				char* Tx = newPkt.SerializeData(Size);  // serializing the packet to send it to the server
 
+				std::cout << "This is inside 'confirmation == P' before sendto: " << std::endl;
 
 				//Sending an empty packet to initialize the connection with the server
 				int send_result = sendto(ClientSocket, Tx, Size, 0,
 					(struct sockaddr*)&SvrAddr, sizeof(SvrAddr));
+
+				std::cout << "This is the send result inside 'confirmation == P': " << send_result << std::endl;
 
 				// if the return value of the 'sendto' function is -1, close the server socket and end the program
 				if (send_result == -1)
@@ -132,17 +160,26 @@ int main(int argc, char* argv[])
 
 				// Defining a buffer to store the received data in
 				char buffer[sizeof(Packet)];
-				Packet receivedPkt;
+				/*Packet receivedPkt;*/
 				int addrSize = sizeof(SvrAddr);
 
 				// Receive the data and deserialize it
 				int receivedBytes = recvfrom(ClientSocket, buffer, sizeof(buffer), 0, (struct sockaddr*)&SvrAddr, &addrSize);
-				if (receivedBytes >= 0) {
-					Packet receivedPkt(buffer);   // deserialize the packet
-				}
+				
+				std::cout << "This is for the confirmation packet in client: " << receivedBytes << std::endl;
+
+				Packet receivedPkt(buffer);
+
+				//if (receivedBytes >= 0) {
+				//	Packet receivedPkt(buffer);   // deserialize the packet
+				//}
 
 				confirmation = receivedPkt.GetConfirmationFlag();
 				finish = receivedPkt.GetFinishedFlag();
+
+				std::cout << "Confirmation Flag: " << confirmation << std::endl;
+				
+				std::cout << "Finished Flag: " << finish << std::endl;
 			}
 
 			/*
@@ -151,6 +188,8 @@ int main(int argc, char* argv[])
 			*/
 			else
 			{
+
+				std::cout << "Packet is corrupted. Sending again...." << std::endl;
 
 				//Sending an empty packet to initialize the connection with the server
 				int send_result = sendto(ClientSocket, Tx, Size, 0,
@@ -204,6 +243,8 @@ int main(int argc, char* argv[])
 		//Sending an empty packet to initialize the connection with the server
 		int send_result = sendto(ClientSocket, Tx, Size, 0,
 			(struct sockaddr*)&SvrAddr, sizeof(SvrAddr));
+
+		std::cout << "Disconnection send_result size: " << send_result << std::endl;
 
 		// if the return value of the 'sendto' function is -1, close the server socket and end the program
 		if (send_result == -1)
