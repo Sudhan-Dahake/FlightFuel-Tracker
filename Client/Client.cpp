@@ -7,8 +7,6 @@
 #include "File.h"
 
 
-
-
 int main(int argc, char* argv[])
 {
 
@@ -46,7 +44,8 @@ int main(int argc, char* argv[])
 	Packet newPkt;
 
 	// Send an empty packet to the server in order to establish the relationship
-	int flightId = argv[1];
+	string flightID = argv[1];
+	int flightId = stoi(flightID);  // converted the string to integer for future use
 
 	// Setting the header information
 	newPkt.SetFlightID(flightId);
