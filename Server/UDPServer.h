@@ -37,6 +37,8 @@ class UDPServer {
 
 	std::mutex fileMutex;
 
+	int port;
+
 
 	/*std::unordered_map<std::string, int> clientFlightIds;
 	std::mutex clientIdMutex;*/
