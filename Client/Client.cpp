@@ -46,12 +46,14 @@ int main(int argc, char* argv[])
 	Packet newPkt;
 
 	// Send an empty packet to the server in order to establish the relationship
+	int flightId = argv[1];
 
 	// Setting the header information
-	newPkt.SetFlightID(0);
+	newPkt.SetFlightID(flightId);
 	newPkt.SetConfirmationFlag();  //the parameter has a default value of 'P'
 	newPkt.SetFinishedFlag();  // the parameter has a default value of 'N'
 	newPkt.SetBodyLengthInHeader(0);
+
 
 	FlightData data;
 	newPkt.SetData(data, 0);  // set the value of the data which is empty for the first initializer packet
@@ -79,15 +81,15 @@ int main(int argc, char* argv[])
 	Packet receivedPkt;
 	int addrSize = sizeof(SvrAddr);
 
-	int flightId;
 
-	// Receive the data and deserialize it
-	int receivedBytes = recvfrom(ClientSocket, buffer, sizeof(buffer), 0, (struct sockaddr*)&SvrAddr, &addrSize);
-	if (receivedBytes >= 0) {
-		memcpy(&flightId, buffer, sizeof(int));
 
-		/*Packet receivedPkt(buffer);*/   // deserialize the packet
-	}
+	//// Receive the data and deserialize it
+	//int receivedBytes = recvfrom(ClientSocket, buffer, sizeof(buffer), 0, (struct sockaddr*)&SvrAddr, &addrSize);
+	//if (receivedBytes >= 0) {
+	//	memcpy(&flightId, buffer, sizeof(int));
+
+	//	/*Packet receivedPkt(buffer);*/   // deserialize the packet
+	//}
 
 	/*int flightId = receivedPkt.GetFlightID();*/  // saving the flight id for future use
 
@@ -96,7 +98,7 @@ int main(int argc, char* argv[])
 
 
 	// sending packets with the file data to the server
-	std::string fileName = argv[1];   // Getting the file name from the command line to make the solution dynamic
+	std::string fileName = argv[2];   // Getting the file name from the command line to make the solution dynamic
 	std::ifstream f(fileName);
 
 	std::cout << "This is the filename => " << fileName << std::endl;
