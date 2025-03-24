@@ -7,6 +7,23 @@
 #include "File.h"
 
 
+// Defining a function to help with setting up the packet all in once place
+Packet PreparePacket(int flightId, char confirmationFlag, char finishedFlag)
+{
+	Packet newPkt;
+
+	// Setting the header information
+	newPkt.SetFlightID(flightId);
+	newPkt.SetConfirmationFlag(confirmationFlag);  //the parameter has a default value of 'P'
+	newPkt.SetFinishedFlag(finishedFlag);  // the parameter has a default value of 'N'
+
+	FlightData data;
+	newPkt.SetData(data, sizeof(FlightData));  // set the value of the data which is empty for the first initializer packet
+
+	return newPkt;
+}
+
+
 int main(int argc, char* argv[])
 {
 
@@ -47,38 +64,37 @@ int main(int argc, char* argv[])
 	string flightID = argv[1];
 	int flightId = stoi(flightID);  // converted the string to integer for future use
 
-	// Setting the header information
-	newPkt.SetFlightID(flightId);
-	newPkt.SetConfirmationFlag();  //the parameter has a default value of 'P'
-	newPkt.SetFinishedFlag();  // the parameter has a default value of 'N'
-	newPkt.SetBodyLengthInHeader(0);
+	//// Setting the header information
+	//newPkt.SetFlightID(flightId);
+	//newPkt.SetConfirmationFlag();  //the parameter has a default value of 'P'
+	//newPkt.SetFinishedFlag();  // the parameter has a default value of 'N'
 
 
-	FlightData data;
-	newPkt.SetData(data, 0);  // set the value of the data which is empty for the first initializer packet
-	int Size = 0;
-	char* Tx = newPkt.SerializeData(Size);  // serializing the packet to send it to the server
+	//FlightData data;
+	//newPkt.SetData(data, 0);  // set the value of the data which is empty for the first initializer packet
+	//int Size = 0;
+	//char* Tx = newPkt.SerializeData(Size);  // serializing the packet to send it to the server
 
-	std::cout << "This is the size in main: " << Size << std::endl;
-	//Sending an empty packet to initialize the connection with the server
-	int send_result = sendto(ClientSocket, Tx, Size, 0,
-		(struct sockaddr*)&SvrAddr, sizeof(SvrAddr));
+	//std::cout << "This is the size in main: " << Size << std::endl;
+	////Sending an empty packet to initialize the connection with the server
+	//int send_result = sendto(ClientSocket, Tx, Size, 0,
+	//	(struct sockaddr*)&SvrAddr, sizeof(SvrAddr));
 
-	std::cout << "Send Result in Client: " << send_result << std::endl;
+	//std::cout << "Send Result in Client: " << send_result << std::endl;
 
-	// if the return value of the 'sendto' function is -1, close the server socket and end the program
-	if (send_result == -1)
-	{
-		closesocket(ClientSocket);
-		WSACleanup();
-		// display an error message
-		std::cout << "Sending to server failed" << std::endl;
-	}
+	//// if the return value of the 'sendto' function is -1, close the server socket and end the program
+	//if (send_result == -1)
+	//{
+	//	closesocket(ClientSocket);
+	//	WSACleanup();
+	//	// display an error message
+	//	std::cout << "Sending to server failed" << std::endl;
+	//}
 
-	// Defining a buffer to store the received data in
-	char buffer[sizeof(Packet)];
-	Packet receivedPkt;
-	int addrSize = sizeof(SvrAddr);
+	//// Defining a buffer to store the received data in
+	//char buffer[sizeof(Packet)];
+	//Packet receivedPkt;
+	//int addrSize = sizeof(SvrAddr);
 
 
 
@@ -102,9 +118,13 @@ int main(int argc, char* argv[])
 
 	std::cout << "This is the filename => " << fileName << std::endl;
 
+
 	// The flags to determine if the packet sent to the server was corrupted
 	char confirmation = 'P';
 	char finish = 'N';
+
+	int Size = 0;
+	char* Tx = NULL;
 
 	if (f.is_open())
 	{
@@ -125,22 +145,30 @@ int main(int argc, char* argv[])
 			{
 				FlightData flightData = readFromFile(flightId, InputStr);
 
-				std::cout << "Fuel Amount: " << flightData.fuelAmount << std::endl;
+				//std::cout << "Fuel Amount: " << flightData.fuelAmount << std::endl;
 
-				std::cout << "Time in Hours: " << flightData.timeStamp.hour << std::endl;
-				std::cout << "Time in Minutes: " << flightData.timeStamp.minute << std::endl;
-				std::cout << "Time in Seconds: " << flightData.timeStamp.second << std::endl;
+				//std::cout << "Time in Hours: " << flightData.timeStamp.hour << std::endl;
+				//std::cout << "Time in Minutes: " << flightData.timeStamp.minute << std::endl;
+				//std::cout << "Time in Seconds: " << flightData.timeStamp.second << std::endl;
 
 
-				// Setting the header information
-				newPkt.SetFlightID(flightId);
-				newPkt.SetConfirmationFlag();
-				newPkt.SetFinishedFlag();
+				//// Setting the header information
+				//newPkt.SetFlightID(flightId);
+				//newPkt.SetConfirmationFlag();
+				//newPkt.SetFinishedFlag();
 
-				/*FlightData data;*/
-				newPkt.SetData(flightData, sizeof(flightData));
+				///*FlightData data;*/
+				//newPkt.SetData(flightData, sizeof(flightData));
+				
+
+
+				Packet newPkt;
+
+				newPkt = PreparePacket(flightId, confirmation, finish);
+
 				int Size = 0;
 				char* Tx = newPkt.SerializeData(Size);  // serializing the packet to send it to the server
+				Tx = newPkt.SerializeData(Size);  // serializing the packet to send it to the server
 
 				std::cout << "This is inside 'confirmation == P' before sendto: " << std::endl;
 
@@ -176,11 +204,9 @@ int main(int argc, char* argv[])
 				//}
 
 				confirmation = receivedPkt.GetConfirmationFlag();
-				finish = receivedPkt.GetFinishedFlag();
 
 				std::cout << "Confirmation Flag: " << confirmation << std::endl;
 				
-				std::cout << "Finished Flag: " << finish << std::endl;
 			}
 
 			/*
@@ -230,16 +256,15 @@ int main(int argc, char* argv[])
 
 		finish = 'D';
 
-		// Setting the header information
-		newPkt.SetFlightID(flightId);
-		newPkt.SetConfirmationFlag();  //the parameter has a default value of 'P'
-		newPkt.SetFinishedFlag(finish);  // the parameter has a default value of 'N'
+		Packet newPKT;
 
-		FlightData data;
-		newPkt.SetData(data, 0);  // set the value of the data which is empty for the first initializer packet
+		newPKT = PreparePacket(flightId, confirmation, finish); 
+		
 		int Size = 0;
 		char* Tx = newPkt.SerializeData(Size);  // serializing the packet to send it to the server
 
+
+		cout << "Sending the finishing packet: " << newPKT.GetFinishedFlag() << endl;
 
 		//Sending an empty packet to initialize the connection with the server
 		int send_result = sendto(ClientSocket, Tx, Size, 0,

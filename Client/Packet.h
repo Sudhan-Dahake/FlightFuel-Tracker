@@ -114,5 +114,8 @@ public:
 	// Set a default value of N (Not done) for the flag
 	void SetFinishedFlag(unsigned char status = 'N') { Head.finishedFlag = status; }
 
-	void SetBodyLengthInHeader(unsigned int bodyLength) { Head.Length = bodyLength; };
+
+
+
+	//void SetBodyLengthInHeader(unsigned int bodyLength) { Head.Length = bodyLength; };
 };
