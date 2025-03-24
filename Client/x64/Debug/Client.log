@@ -1,5 +1,6 @@
 ﻿  Client.cpp
+D:\FlightFuel-Tracker\Client\Client.cpp(78,7): warning C4101: 'buffer': unreferenced local variable
   File.cpp
   Generating Code...
-C:\Users\sudha\OneDrive - Conestoga College\Desktop\College\Semester 6\Project_6\Ciient_Server\Client\File.cpp(56,1): warning C4715: 'readFromFile': not all control paths return a value
-  Client.vcxproj -> C:\Users\sudha\OneDrive - Conestoga College\Desktop\College\Semester 6\Project_6\Ciient_Server\x64\Debug\Client.exe
+D:\FlightFuel-Tracker\Client\File.cpp(56,1): warning C4715: 'readFromFile': not all control paths return a value
+  Client.vcxproj -> D:\FlightFuel-Tracker\x64\Debug\Client.exe
