@@ -5,6 +5,7 @@
 #include <mutex>
 #include <windows.networking.sockets.h>
 #include <fstream>
+#include <unordered_map>
 #include "Packet.h"
 
 #pragma comment(lib, "Ws2_32.lib")
