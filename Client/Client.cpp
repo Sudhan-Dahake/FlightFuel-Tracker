@@ -32,7 +32,7 @@ bool receiveWithTimeoutAndResend(SOCKET sock, sockaddr_in& addr, Packet& packetT
     int Size = 0;
     char* Tx = packetToSend.SerializeData(Size);
 
-    while (retries < maxRetries)
+    while (true)
     {
         //Sending an empty packet to initialize the connection with the server
         int send_result = sendto(sock, Tx, Size, 0, (sockaddr*)&addr, sizeof(addr));
@@ -98,7 +98,7 @@ int main(int argc, char* argv[])
     sockaddr_in SvrAddr;
     SvrAddr.sin_family = AF_INET;						//Address family type itnernet
     SvrAddr.sin_port = htons(27000);					//port (host to network conversion)
-    SvrAddr.sin_addr.s_addr = inet_addr("127.0.0.1");	//IP address
+    SvrAddr.sin_addr.s_addr = inet_addr("10.144.121.29");	//IP address
 
     // sending packets with the file data to the server
     std::string flightID = argv[1];
