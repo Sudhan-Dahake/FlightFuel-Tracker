@@ -20,12 +20,10 @@ Packet::Packet(char* src) {
 	memcpy(&(this->Head), src, sizeof(Header));
 
 	if ((this->Head.finishedFlag != 'D') && (this->Head.Length != 0)) {
-		memset(&(this->flightData), 0, sizeof(FlightData));
-
 		memcpy(&(this->flightData), src + sizeof(Header), this->Head.Length);
-
-		memcpy(&(this->CRC), src + sizeof(Header) + this->Head.Length, sizeof(this->CRC));
 	};
+
+	memcpy(&(this->CRC), src + sizeof(Header) + this->Head.Length, sizeof(this->CRC));
 
 	this->TxBuffer = nullptr;
 };
@@ -85,5 +83,6 @@ bool Packet::IsBodyPresent() {
 };
 
 bool Packet::IsFinishedFlagSet() {
+	std::cout << "This is the finished flag inside function: " << this->Head.finishedFlag << std::endl;
 	return (this->Head.finishedFlag == 'D') ? true : false;
 };

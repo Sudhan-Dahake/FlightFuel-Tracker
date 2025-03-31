@@ -1,3 +1,7 @@
 .vs/
 Server/x64/
+Client/x64/
 x64/
+Server/Avg_Fuel_Consumption_In_Flights.txt
+Client/katl-kefd-B737-700.txt
+*.user

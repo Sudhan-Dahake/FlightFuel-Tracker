@@ -8,7 +8,7 @@
 
 
 // Defining a function to help with setting up the packet all in once place
-Packet PreparePacket(int flightId, char confirmationFlag, char finishedFlag)
+Packet PreparePacket(int flightId, char confirmationFlag, char finishedFlag, FlightData* data, int dataSize = sizeof(FlightData))
 {
 	Packet newPkt;
 
@@ -17,8 +17,13 @@ Packet PreparePacket(int flightId, char confirmationFlag, char finishedFlag)
 	newPkt.SetConfirmationFlag(confirmationFlag);  //the parameter has a default value of 'P'
 	newPkt.SetFinishedFlag(finishedFlag);  // the parameter has a default value of 'N'
 
-	FlightData data;
-	newPkt.SetData(data, sizeof(FlightData));  // set the value of the data which is empty for the first initializer packet
+	if (data) {
+		newPkt.SetData(*data, dataSize);  // set the value of the data which is empty for the first initializer packet
+	}
+
+	else {
+		newPkt.SetBodyLength(dataSize);
+	};
 
 	return newPkt;
 }
@@ -145,6 +150,9 @@ int main(int argc, char* argv[])
 			{
 				FlightData flightData = readFromFile(flightId, InputStr);
 
+				std::cout << "This is the fuel Amount: " << flightData.fuelAmount << std::endl;
+				std::cout << "This is the timestamp: " << flightData.timeStamp.hour << std::endl;
+
 				//std::cout << "Fuel Amount: " << flightData.fuelAmount << std::endl;
 
 				//std::cout << "Time in Hours: " << flightData.timeStamp.hour << std::endl;
@@ -164,7 +172,7 @@ int main(int argc, char* argv[])
 
 				Packet newPkt;
 
-				newPkt = PreparePacket(flightId, confirmation, finish);
+				newPkt = PreparePacket(flightId, confirmation, finish, &flightData);
 
 				int Size = 0;
 				char* Tx = newPkt.SerializeData(Size);  // serializing the packet to send it to the server
@@ -258,13 +266,15 @@ int main(int argc, char* argv[])
 
 		Packet newPKT;
 
-		newPKT = PreparePacket(flightId, confirmation, finish); 
+		newPKT = PreparePacket(flightId, confirmation, finish, nullptr, 0);
 		
 		int Size = 0;
-		char* Tx = newPkt.SerializeData(Size);  // serializing the packet to send it to the server
+		char* Tx = newPKT.SerializeData(Size);  // serializing the packet to send it to the server
 
 
 		cout << "Sending the finishing packet: " << newPKT.GetFinishedFlag() << endl;
+
+		cout << "Size of the final packet: " << Size << endl;
 
 		//Sending an empty packet to initialize the connection with the server
 		int send_result = sendto(ClientSocket, Tx, Size, 0,

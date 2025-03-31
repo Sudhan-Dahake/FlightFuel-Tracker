@@ -78,14 +78,17 @@ public:
 		std::cout << "Size of FlightData: " << sizeof(FlightData) << std::endl;
 		std::cout << "Size of CRC: " << sizeof(CRC) << std::endl;
 
-		TotalSize = sizeof(Head) + sizeof(FlightData) + sizeof(CRC);  //this is the full size of the packet (head + body + tail)
+		TotalSize = sizeof(Head) + Head.Length + sizeof(CRC);  //this is the full size of the packet (head + body + tail)
 
 		std::cout << TotalSize << " => This is the size of total size." << std::endl;
 
 		TxBuffer = new char[TotalSize];
 
 		memcpy(TxBuffer, &Head, sizeof(Head));
-		memcpy(TxBuffer + sizeof(Head), &Data, Head.Length);
+
+		if (Head.Length != 0) {
+			memcpy(TxBuffer + sizeof(Head), &Data, Head.Length);
+		}
 
 		unsigned int CRC = CalculateCRC();
 		memcpy(TxBuffer + sizeof(Head) + Head.Length, &CRC, sizeof(CRC));
@@ -113,6 +116,8 @@ public:
 	unsigned char GetFinishedFlag() { return Head.finishedFlag; }
 	// Set a default value of N (Not done) for the flag
 	void SetFinishedFlag(unsigned char status = 'N') { Head.finishedFlag = status; }
+
+	void SetBodyLength(unsigned int bodyLength = 0) { Head.Length = bodyLength; };
 
 
 
