@@ -3,7 +3,7 @@
 
 int main()
 {
-	UDPServer UDPServer(27000, 4);
+	UDPServer UDPServer(27000, 14);
 
 	UDPServer.Start();
 
