@@ -50,7 +50,7 @@ bool receiveWithTimeoutAndResend(SOCKET sock, sockaddr_in& addr, Packet& packetT
         FD_SET(sock, &readfds);
 
         timeval timeout;
-        timeout.tv_sec = 10;
+        timeout.tv_sec = 7200;
         timeout.tv_usec = 0;
 
         int ready = select(0, &readfds, NULL, NULL, &timeout);
