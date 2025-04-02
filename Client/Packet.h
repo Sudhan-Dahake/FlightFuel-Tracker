@@ -51,9 +51,9 @@ public:
 	{
 		memcpy(&Head, src, sizeof(Head));
 
-		std::cout << "Confirmation Flag Inside Packet.h: " << Head.confirmationFlag << std::endl;
+		/*std::cout << "Confirmation Flag Inside Packet.h: " << Head.confirmationFlag << std::endl;
 
-		std::cout << "Finished Flag Inside Packet.h: " << Head.finishedFlag << std::endl;
+		std::cout << "Finished Flag Inside Packet.h: " << Head.finishedFlag << std::endl;*/
 
 		if (this->Head.Length != 0) {
 			memcpy(&Data, src + sizeof(Head), Head.Length);
@@ -73,14 +73,14 @@ public:
 		if (TxBuffer)
 			delete[] TxBuffer;
 
-		std::cout << "Size of HEADER: " << sizeof(Header) << std::endl;
+		/*std::cout << "Size of HEADER: " << sizeof(Header) << std::endl;
 		std::cout << "Size of Head: " << sizeof(Head) << std::endl;
 		std::cout << "Size of FlightData: " << sizeof(FlightData) << std::endl;
-		std::cout << "Size of CRC: " << sizeof(CRC) << std::endl;
+		std::cout << "Size of CRC: " << sizeof(CRC) << std::endl;*/
 
 		TotalSize = sizeof(Head) + Head.Length + sizeof(CRC);  //this is the full size of the packet (head + body + tail)
 
-		std::cout << TotalSize << " => This is the size of total size." << std::endl;
+		/*std::cout << TotalSize << " => This is the size of total size." << std::endl;*/
 
 		TxBuffer = new char[TotalSize];
 

@@ -50,7 +50,7 @@ bool receiveWithTimeoutAndResend(SOCKET sock, sockaddr_in& addr, Packet& packetT
         FD_SET(sock, &readfds);
 
         timeval timeout;
-        timeout.tv_sec = 3600;
+        timeout.tv_sec = 180;
         timeout.tv_usec = 0;
 
         int ready = select(0, &readfds, NULL, NULL, &timeout);
@@ -98,7 +98,7 @@ int main(int argc, char* argv[])
     sockaddr_in SvrAddr;
     SvrAddr.sin_family = AF_INET;						//Address family type itnernet
     SvrAddr.sin_port = htons(27000);					//port (host to network conversion)
-    SvrAddr.sin_addr.s_addr = inet_addr("100.81.237.7");	//IP address
+    SvrAddr.sin_addr.s_addr = inet_addr("100.84.164.114");	//IP address
 
     // sending packets with the file data to the server
     std::string flightID = argv[1];
