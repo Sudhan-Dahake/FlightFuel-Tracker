@@ -83,6 +83,5 @@ bool Packet::IsBodyPresent() {
 };
 
 bool Packet::IsFinishedFlagSet() {
-	std::cout << "This is the finished flag inside function: " << this->Head.finishedFlag << std::endl;
 	return (this->Head.finishedFlag == 'D') ? true : false;
 };

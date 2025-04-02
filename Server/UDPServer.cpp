@@ -52,7 +52,7 @@ void UDPServer::Start() {
 	int len = sizeof(struct sockaddr_in);
 
 	while (true) {
-		std::cout << "UDP Server listening on port: " << this->port << "..." << "\n";
+		std::cout << "UDP Server listening on port: " << this->port << "...\n";
 
 		int recvSize = recvfrom(this->ServerSocket, RxBuffer, sizeof(RxBuffer), 0, (struct sockaddr*)&CltAddr, &len);
 
@@ -188,7 +188,7 @@ void UDPServer::HandlePacket(char* RxBuffer, sockaddr_in CltAddr, bool IsPacketV
 
 		int sendSize = sendto(this->ServerSocket, TxBuffer, sizeof(int), 0, (sockaddr*)&CltAddr, sizeof(CltAddr));
 
-		std::cout << "First SendTo in UDPServer: " << sendSize << std::endl;
+		/*std::cout << "First SendTo in UDPServer: " << sendSize << std::endl;*/
 
 		this->FlightIdCounter.fetch_add(1);
 
