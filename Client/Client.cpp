@@ -42,7 +42,7 @@ bool receiveWithTimeoutAndResend(SOCKET sock, sockaddr_in& addr, Packet& packetT
             return false;
         }
 
-        std::cout << "Sent packet (attempt " << retries + 1 << ")" << std::endl;
+        std::cout << "Sent packet (attempt " << retries + 1 << ")\n";
 
         // Receive the data and deserialize it
         fd_set readfds;
@@ -67,7 +67,7 @@ bool receiveWithTimeoutAndResend(SOCKET sock, sockaddr_in& addr, Packet& packetT
         }
         else
         {
-            std::cout << "Timeout waiting for response. Retrying... (" << retries + 1 << "/" << maxRetries << ")" << std::endl;
+            std::cout << "Timeout waiting for response. Retrying... (" << retries + 1 << "/" << maxRetries << ")\n";
         }
 
         retries++;
@@ -79,7 +79,7 @@ bool receiveWithTimeoutAndResend(SOCKET sock, sockaddr_in& addr, Packet& packetT
 int main(int argc, char* argv[])
 {
     if (argc < 3) {
-        std::cerr << "Usage: client <flight_id> <input_file>" << std::endl;
+        std::cerr << "Usage: client <flight_id> <input_file>\n";
         return 1;
     }
 
@@ -98,7 +98,7 @@ int main(int argc, char* argv[])
     sockaddr_in SvrAddr;
     SvrAddr.sin_family = AF_INET;						//Address family type itnernet
     SvrAddr.sin_port = htons(27000);					//port (host to network conversion)
-    SvrAddr.sin_addr.s_addr = inet_addr("10.144.122.177");	//IP address
+    SvrAddr.sin_addr.s_addr = inet_addr("100.81.237.7");	//IP address
 
     // sending packets with the file data to the server
     std::string flightID = argv[1];
@@ -106,7 +106,7 @@ int main(int argc, char* argv[])
     std::string fileName = argv[2];   // Getting the file name from the command line to make the solution dynamic
     std::ifstream f(fileName);
 
-    std::cout << "This is the filename => " << fileName << std::endl;
+    //std::cout << "This is the filename => " << fileName << std::endl;
 
     // The flags to determine if the packet sent to the server was corrupted
     char confirmation = 'P';
@@ -117,20 +117,20 @@ int main(int argc, char* argv[])
         std::string InputStr = "";
         getline(f, InputStr);  //gets first line
 
-        std::cout << "File opened" << std::endl;
+       /* std::cout << "File opened" << std::endl;*/
 
         while (getline(f, InputStr))  // loop until the end of the file
         {
-            std::cout << "File read" << std::endl;
+            /*std::cout << "File read" << std::endl;
             std::cout << "Confirmation Flag: " << confirmation << std::endl;
-            std::cout << "This is the input string: " << InputStr << std::endl;
+            std::cout << "This is the input string: " << InputStr << std::endl;*/
 
             if (confirmation == 'P')
             {
                 FlightData flightData = readFromFile(flightId, InputStr);
 
-                std::cout << "This is the fuel Amount: " << flightData.fuelAmount << std::endl;
-                std::cout << "This is the timestamp: " << flightData.timeStamp.hour << std::endl;
+                /*std::cout << "This is the fuel Amount: " << flightData.fuelAmount << std::endl;
+                std::cout << "This is the timestamp: " << flightData.timeStamp.hour << std::endl;*/
 
                 //std::cout << "Fuel Amount: " << flightData.fuelAmount << std::endl;
 
@@ -146,6 +146,8 @@ int main(int argc, char* argv[])
                 ///*FlightData data;*/
                 //newPkt.SetData(flightData, sizeof(flightData));
 
+                std::cout << "Sending Packet\n";
+
                 Packet packetToSend = PreparePacket(flightId, confirmation, finish, &flightData);
                 Packet receivedPkt;
 
@@ -157,7 +159,7 @@ int main(int argc, char* argv[])
                     return -1;
                 }
 
-                std::cout << "Received confirmation flag: " << confirmation << std::endl;
+                /*std::cout << "Received confirmation flag: " << confirmation << std::endl;*/
             }
 
             /*
@@ -166,7 +168,7 @@ int main(int argc, char* argv[])
             */
             else
             {
-                std::cout << "Packet is corrupted. Sending again...." << std::endl;
+                /*std::cout << "Packet is corrupted. Sending again...." << std::endl;*/
 
                 Packet packetToResend = PreparePacket(flightId, confirmation, finish, nullptr, 0);
                 Packet receivedPkt;
@@ -193,14 +195,14 @@ int main(int argc, char* argv[])
         int Size = 0;
         char* Tx = newPKT.SerializeData(Size);  // serializing the packet to send it to the server
 
-        cout << "Sending the finishing packet: " << newPKT.GetFinishedFlag() << endl;
+        std::cout << "Sending the finishing packet\n";
 
-        cout << "Size of the final packet: " << Size << endl;
+        /*cout << "Size of the final packet: " << Size << endl;*/
 
         //Sending a packet with header only to disconnect with the server.
         int send_result = sendto(ClientSocket, Tx, Size, 0, (struct sockaddr*)&SvrAddr, sizeof(SvrAddr));
 
-        std::cout << "Disconnection send_result size: " << send_result << std::endl;
+        /*std::cout << "Disconnection send_result size: " << send_result << std::endl;*/
 
         // if the return value of the 'sendto' function is -1, close the server socket and end the program
         if (send_result == -1)
