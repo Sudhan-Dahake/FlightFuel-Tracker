@@ -26,11 +26,11 @@ class TCPServer {
 
 	std::mutex mutex;
 
-	std::unordered_map<int, FlightSnapshot> previousData;
+	std::unordered_map<int, FlightSnapshot>* previousData;
 
 	std::mutex data_mutex;
 
-	std::unordered_map<int, std::vector<float>> flightConsumptions;
+	std::unordered_map<int, std::vector<float>>* flightConsumptions;
 
 	std::mutex sendMutex;
 
