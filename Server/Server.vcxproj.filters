@@ -24,12 +24,18 @@
     <ClCompile Include="UDPServer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="TCPServer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Packet.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="UDPServer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TCPServer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
