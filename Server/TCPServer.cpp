@@ -45,11 +45,21 @@ TCPServer::TCPServer(int port, int threadPoolSize)
 	/*std::cout << "UDP Server listening on port: " << port << "..." << "\n";*/
 
 	this->port = port;
+
+	this->previousData = new std::unordered_map<int, FlightSnapshot>();
+
+	this->flightConsumptions = new std::unordered_map<int, std::vector<float>>();
 };
 
 
 TCPServer::~TCPServer() {
 	closesocket(this->ServerSocket);
+
+	delete this->previousData;
+	this->previousData = nullptr;
+
+	delete this->flightConsumptions;
+	this->flightConsumptions = nullptr;
 
 	WSACleanup();
 }
@@ -80,11 +90,11 @@ void TCPServer::HandleClient(SOCKET clientSocket) {
 
 	bool isClientDisconnected = false;
 
+	char* RxBuffer = new char[PACKETSIZE];
+
+	memset(RxBuffer, 0, PACKETSIZE);
+
 	while (!isClientDisconnected) {
-		char* RxBuffer = new char[PACKETSIZE];
-
-		memset(RxBuffer, 0, PACKETSIZE);
-
 		recvSize = recv(clientSocket, RxBuffer, PACKETSIZE, 0);
 
 		std::cout << "Packet Received :)" << std::endl;
@@ -100,9 +110,10 @@ void TCPServer::HandleClient(SOCKET clientSocket) {
 		}
 
 		this->HandlePacket(clientSocket, RxBuffer, isClientDisconnected);
-
-		delete[] RxBuffer;
 	}
+
+	delete[] RxBuffer;
+	RxBuffer = nullptr;
 
 	closesocket(clientSocket);
 }
@@ -129,9 +140,9 @@ void TCPServer::HandlePacket(SOCKET clientSocket, char* RxBuffer, bool& isClient
 		{
 			std::lock_guard<std::mutex> lock(data_mutex);
 
-			auto it = previousData.find(flightID);
+			auto it = this->previousData->find(flightID);
 
-			if (it != previousData.end()) {
+			if (it != this->previousData->end()) {
 				TimeInfo prevTime = it->second.time;
 
 				float prevFuel = it->second.fuel;
@@ -139,15 +150,15 @@ void TCPServer::HandlePacket(SOCKET clientSocket, char* RxBuffer, bool& isClient
 				consumption = this->ComputeFuelConsumption(prevTime, prevFuel, currTime, currFuel);
 
 				if (consumption > 0.0f) {
-					this->flightConsumptions[flightID].push_back(consumption);
+					(*this->flightConsumptions)[flightID].push_back(consumption);
 				}
 			}
-			previousData[flightID] = { currTime, currFuel };
+			(*this->previousData)[flightID] = { currTime, currFuel };
 		}
 	}
 
 	else if (pkt.GetHeader().finishedFlag == 'D') {
-		const std::vector<float>& fuelConsumptionRates = this->flightConsumptions[pkt.GetHeader().flightID];
+		const std::vector<float>& fuelConsumptionRates = (*this->flightConsumptions)[pkt.GetHeader().flightID];
 
 		if (!fuelConsumptionRates.empty()) {
 			float sum = 0.0f;

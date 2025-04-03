@@ -8,7 +8,7 @@ int main()
 
 	UDPServer.Start();*/
 
-	TCPServer TCPServer(27000, 4);
+	TCPServer TCPServer(27000, 8);
 
 	TCPServer.Start();
 
