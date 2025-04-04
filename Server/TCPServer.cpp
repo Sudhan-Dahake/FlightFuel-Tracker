@@ -67,7 +67,7 @@ TCPServer::~TCPServer() {
 
 void TCPServer::Start() {
 	while (true) {
-		std::cout << "TCP Server listening on port: " << this->port << "...\n";
+		std::cout << "TCP Server ready\n";
 
 		SOCKET clientSocket = accept(this->ServerSocket, NULL, NULL);
 
@@ -76,6 +76,8 @@ void TCPServer::Start() {
 
 			continue;
 		};
+
+		std::cout << "Client connected\n";
 
 		// Offload to thread pool
 		boost::asio::post(threadPool, [this, clientSocket]() {
@@ -97,7 +99,7 @@ void TCPServer::HandleClient(SOCKET clientSocket) {
 	while (!isClientDisconnected) {
 		recvSize = recv(clientSocket, RxBuffer, PACKETSIZE, 0);
 
-		std::cout << "Packet Received :)" << std::endl;
+		//std::cout << "Packet Received :)" << std::endl;
 
 		if (recvSize == 0) {
 			std::cout << "Client disconnected.\n";
@@ -131,7 +133,7 @@ void TCPServer::HandlePacket(SOCKET clientSocket, char* RxBuffer, bool& isClient
 
 		int flightID = head.flightID;
 
-		TimeInfo currTime = flightData.timeStamp;
+		int currTime = (flightData.timeStamp.hour * 3600) + (flightData.timeStamp.minute * 60) + flightData.timeStamp.second;
 
 		float currFuel = flightData.fuelAmount;
 
@@ -143,7 +145,7 @@ void TCPServer::HandlePacket(SOCKET clientSocket, char* RxBuffer, bool& isClient
 			auto it = this->previousData->find(flightID);
 
 			if (it != this->previousData->end()) {
-				TimeInfo prevTime = it->second.time;
+				int prevTime = it->second.time;
 
 				float prevFuel = it->second.fuel;
 
@@ -188,7 +190,7 @@ void TCPServer::HandlePacket(SOCKET clientSocket, char* RxBuffer, bool& isClient
 		else {
 			std::cout << "Flight ID " << pkt.GetHeader().flightID << " completed, but not enough data to compute average.\n";
 		}
-
+		std::cout << "Client completed\n";
 		isClientDisconnected = true;
 	}
 };
@@ -199,8 +201,10 @@ int TCPServer::ConvertToSeconds(const TimeInfo& t) {
 };
 
 
-float TCPServer::ComputeFuelConsumption(const TimeInfo& prevTime, float prevFuel, const TimeInfo& currTime, float currFuel) {
-	int deltaT = this->ConvertToSeconds(currTime) - this->ConvertToSeconds(prevTime);
+
+float TCPServer::ComputeFuelConsumption(const int& prevTime, float prevFuel, const int& currTime, float currFuel) {
+
+	int deltaT = currTime - prevTime;
 
 	float deltaFuel = prevFuel - currFuel;
 
