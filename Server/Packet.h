@@ -14,7 +14,7 @@ struct TimeInfo
 
 struct FlightData
 {
-	TimeInfo timeStamp;
+	int timeStamp;
 	float fuelAmount;
 };
 
@@ -22,7 +22,6 @@ struct Header
 {
 	unsigned int flightID;			//Line number of the input file being transmitted
 	unsigned int Length;					//Number of characters in the line
-	unsigned char confirmationFlag;  //P for pass, F for fail
 	unsigned char finishedFlag; //D for done, N for not done 
 };
 
@@ -32,8 +31,6 @@ class Packet
 	Header Head;
 	
 	FlightData flightData;
-	
-	unsigned int CRC;					//Cyclic Redundancy Check
 
 	char* TxBuffer;
 
@@ -52,8 +49,6 @@ public:
 	Header GetHeader();
 
 	FlightData GetFlightData();
-
-	unsigned int CalculateCRC();
 
 	bool IsBodyPresent();
 
