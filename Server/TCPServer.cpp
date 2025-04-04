@@ -133,7 +133,7 @@ void TCPServer::HandlePacket(SOCKET clientSocket, char* RxBuffer, bool& isClient
 
 		int flightID = head.flightID;
 
-		int currTime = (flightData.timeStamp.hour * 3600) + (flightData.timeStamp.minute * 60) + flightData.timeStamp.second;
+		int currTime = flightData.timeStamp; //(flightData.timeStamp.hour * 3600) + (flightData.timeStamp.minute * 60) + flightData.timeStamp.second;
 
 		float currFuel = flightData.fuelAmount;
 
@@ -196,9 +196,9 @@ void TCPServer::HandlePacket(SOCKET clientSocket, char* RxBuffer, bool& isClient
 };
 
 
-int TCPServer::ConvertToSeconds(const TimeInfo& t) {
-	return ((t.hour * 3600) + (t.minute * 60) + t.second);
-};
+//int TCPServer::ConvertToSeconds(const TimeInfo& t) {
+//	return ((t.hour * 3600) + (t.minute * 60) + t.second);
+//};
 
 
 

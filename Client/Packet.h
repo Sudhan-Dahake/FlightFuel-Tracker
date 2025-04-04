@@ -13,12 +13,12 @@ struct TimeInfo
 	int second;
 };
 
+
 struct FlightData
 {
-	TimeInfo timeStamp;
+	int timeStamp;
 	float fuelAmount;
 };
-
 
 class Packet
 {
@@ -26,11 +26,9 @@ class Packet
 	{
 		unsigned int flightID;			//Line number of the input file being transmitted
 		unsigned int Length;					//Number of characters in the line
-		unsigned char confirmationFlag;  //P for pass, F for fail
 		unsigned char finishedFlag; //D for done, N for not done 
 	} Head;
 	FlightData Data;							//The data bytes
-	unsigned int CRC;					//Cyclic Redundancy Check
 
 	char* TxBuffer;
 
@@ -42,8 +40,8 @@ public:
 		os << std::dec;
 		os << "flight ID:  " << (int)Head.flightID << std::endl;
 		os << "Length:  " << (int)Head.Length << std::endl;
-		os << "Timestamp: " << Data.timeStamp.hour << Data.timeStamp.minute << Data.timeStamp.second << std::endl;
-		os << "Fuel amount: " << Data.fuelAmount << std::endl;		os << "CRC:     " << std::hex << (unsigned int)CRC << std::endl;
+		os << "Timestamp: " << Data.timeStamp << std::endl;//Data.timeStamp.hour << Data.timeStamp.minute << Data.timeStamp.second << std::endl;
+		os << "Fuel amount: " << Data.fuelAmount << std::endl;		
 	}
 
 
@@ -57,7 +55,6 @@ public:
 
 		if (this->Head.Length != 0) {
 			memcpy(&Data, src + sizeof(Head), Head.Length);
-			memcpy(&CRC, src + sizeof(Head) + Head.Length, sizeof(CRC));
 		};
 	}
 
@@ -78,7 +75,7 @@ public:
 		std::cout << "Size of FlightData: " << sizeof(FlightData) << std::endl;
 		std::cout << "Size of CRC: " << sizeof(CRC) << std::endl;*/
 
-		TotalSize = sizeof(Head) + Head.Length + sizeof(CRC);  //this is the full size of the packet (head + body + tail)
+		TotalSize = sizeof(Head) + Head.Length; //+ sizeof(CRC);  //this is the full size of the packet (head + body + tail)
 
 		/*std::cout << TotalSize << " => This is the size of total size." << std::endl;*/
 
@@ -90,27 +87,21 @@ public:
 			memcpy(TxBuffer + sizeof(Head), &Data, Head.Length);
 		}
 
-		unsigned int CRC = CalculateCRC();
-		memcpy(TxBuffer + sizeof(Head) + Head.Length, &CRC, sizeof(CRC));
 
 
 		return TxBuffer;
 	};
 
-	unsigned int CalculateCRC()
-	{
-		return 0xFF00FF00;
-	}
 
 
 	// Defining the getter and setter for the flight ID
 	unsigned int GetFlightID() { return Head.flightID; }
 	void SetFlightID(unsigned int flightID) { Head.flightID = flightID; }
 
-	// Defining a setter and getter for the confirmation flag (to let the client know if there was a problem with the packet sent to server)
-	unsigned char GetConfirmationFlag() { return Head.confirmationFlag; }
-	// Set a default value of P (pass) for the flag
-	void SetConfirmationFlag(unsigned char confirmation = 'P') { Head.confirmationFlag = confirmation; }
+	//// Defining a setter and getter for the confirmation flag (to let the client know if there was a problem with the packet sent to server)
+	//unsigned char GetConfirmationFlag() { return Head.confirmationFlag; }
+	//// Set a default value of P (pass) for the flag
+	//void SetConfirmationFlag(unsigned char confirmation = 'P') { Head.confirmationFlag = confirmation; }
 
 	// Defining a setter and getter for the finished flag (to let the server know when the client is done)
 	unsigned char GetFinishedFlag() { return Head.finishedFlag; }
