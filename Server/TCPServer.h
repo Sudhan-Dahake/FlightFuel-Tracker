@@ -13,7 +13,7 @@
 const int PACKETSIZE = sizeof(Header) + sizeof(FlightData) + 4 + 2;
 
 struct FlightSnapshot {
-	TimeInfo time;
+	int time;
 	float fuel;
 };
 
@@ -52,5 +52,5 @@ public:
 
 	int ConvertToSeconds(const TimeInfo& t);
 
-	float ComputeFuelConsumption(const TimeInfo& prevTime, float prevFuel, const TimeInfo& currTime, float currFuel);
+	float ComputeFuelConsumption(const int& prevTime, float prevFuel, const int& currTime, float currFuel);
 };

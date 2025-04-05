@@ -7,13 +7,13 @@
 #include "File.h"
 
 // Defining a function to help with setting up the packet all in once place
-Packet PreparePacket(int flightId, char confirmationFlag, char finishedFlag, FlightData* data, int dataSize = sizeof(FlightData))
+Packet PreparePacket(int flightId, char finishedFlag, FlightData* data, int dataSize = sizeof(FlightData))
 {
     Packet newPkt;
 
     // Setting the header information
     newPkt.SetFlightID(flightId);
-    newPkt.SetConfirmationFlag(confirmationFlag);  //the parameter has a default value of 'P'
+    //newPkt.SetConfirmationFlag(confirmationFlag);  //the parameter has a default value of 'P'
     newPkt.SetFinishedFlag(finishedFlag);  // the parameter has a default value of 'N'
 
     if (data) newPkt.SetData(*data, dataSize);  // set the value of the data which is empty for the first initializer packet
@@ -66,7 +66,7 @@ int main(int argc, char* argv[])
 
 
     // The flags to determine if the packet sent to the server was corrupted
-    char confirmation = 'P';
+    //char confirmation = 'P';
     char finish = 'N';
 
     if (f.is_open())
@@ -86,7 +86,7 @@ int main(int argc, char* argv[])
 
             //std::cout << "Sending Packet\n";
 
-            Packet packetToSend = PreparePacket(flightId, confirmation, finish, &flightData);
+            Packet packetToSend = PreparePacket(flightId, finish, &flightData);
 
 
             int Size = 0;

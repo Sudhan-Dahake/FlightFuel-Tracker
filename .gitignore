@@ -5,3 +5,5 @@ x64/
 Server/Avg_Fuel_Consumption_In_Flights.txt
 Client/katl-kefd-B737-700.txt
 *.user
+/Client/Telem_2023_3_12_14_56_40.txt
+/Report20250403_1455_Server_Crash_Sudhan_Stack_Overflow_.diagsession

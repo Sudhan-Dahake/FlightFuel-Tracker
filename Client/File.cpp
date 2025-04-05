@@ -39,14 +39,18 @@ FlightData readFromFile(int flightId, string InputStr)
 		getline(aa, second);
 
 
-		flightData.timeStamp.hour = stoi(hour);
+		/*flightData.timeStamp.hour = stoi(hour);
 		flightData.timeStamp.minute = stoi(minute);
-		flightData.timeStamp.second = stoi(second);
+		flightData.timeStamp.second = stoi(second);*/
 
+		//int timeStamp = (stoi(hour) * 3600) + (stoi(minute) * 60) + stoi(second);
+
+		flightData.timeStamp = (stoi(hour) * 3600) + (stoi(minute) * 60) + stoi(second);
 		flightData.fuelAmount = stof(fuel);
 
+
 		std::cout << flightId << " "
-			<< flightData.timeStamp.hour << ":" << flightData.timeStamp.minute << ":" << flightData.timeStamp.second << " "
+			<< flightData.timeStamp << " "
 			<< flightData.fuelAmount << std::endl;
 
 		return flightData;
