@@ -75,7 +75,7 @@ public:
 		std::cout << "Size of FlightData: " << sizeof(FlightData) << std::endl;
 		std::cout << "Size of CRC: " << sizeof(CRC) << std::endl;*/
 
-		TotalSize = sizeof(Head) + Head.Length; //+ sizeof(CRC);  //this is the full size of the packet (head + body + tail)
+		TotalSize = sizeof(Header) + Head.Length; //+ sizeof(CRC);  //this is the full size of the packet (head + body + tail)
 
 		/*std::cout << TotalSize << " => This is the size of total size." << std::endl;*/
 
