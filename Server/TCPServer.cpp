@@ -182,10 +182,6 @@ void TCPServer::HandleClient(SOCKET clientSocket) {
 	while (!isClientDisconnected) {
 		recvSize = recv(clientSocket, RxBuffer, PACKETSIZE, 0);
 
-		//std::cout << "Packet Received :)" << std::endl;
-
-		std::cout << "This is the received Size: " << recvSize << std::endl;
-
 		if (recvSize == 0) {
 			std::cout << "Client disconnected.\n";
 
@@ -221,11 +217,7 @@ void TCPServer::HandleClient(SOCKET clientSocket) {
 void TCPServer::HandlePacket(SOCKET clientSocket, char* RxBuffer, bool& isClientDisconnected) {
 	Packet pkt(RxBuffer);
 
-	std::cout << "Here" << std::endl;
-
 	if (pkt.IsBodyPresent()) {
-		std::cout << "Body is present!!" << std::endl;
-
 		Header head = pkt.GetHeader();
 
 		FlightData flightData = pkt.GetFlightData();
@@ -264,8 +256,6 @@ void TCPServer::HandlePacket(SOCKET clientSocket, char* RxBuffer, bool& isClient
 
 
 		if (hasPrevData) {
-			std::cout << "Has prev Data" << std::endl;
-
 			consumption = this->ComputeFuelConsumption(prevTime, prevFuel, currTime, currFuel);
 
 			if (consumption > 0.0f) {
@@ -291,8 +281,6 @@ void TCPServer::HandlePacket(SOCKET clientSocket, char* RxBuffer, bool& isClient
 	}
 
 	else if (pkt.IsFinishedFlagSet()) {
-		std::cout << "Finished Flag is Set" << std::endl;
-
 		std::vector<float> fuelConsumptionRates;
 
 		{
