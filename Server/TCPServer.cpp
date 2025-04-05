@@ -120,6 +120,8 @@ void TCPServer::BackgroundFlusherForFile() {
 
 			if ((this->avgBufferForFileWriting.size() >= FLUSH_THRESHOLD) || ((now - lastFlushTime) >= FLUSH_INTERVAL)) {
 				toFlush.swap(this->avgBufferForFileWriting);
+
+				lastFlushTime = now;
 			};
 		}
 
