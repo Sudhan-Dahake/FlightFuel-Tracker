@@ -121,7 +121,7 @@ int main(int argc, char* argv[])
         }
 
 
-        Packet packetToSend = PreparePacket(flightId, confirmation, 'D', nullptr, 0);
+        Packet packetToSend = PreparePacket(flightId, 'D', nullptr, 0);
 
 
         int Size = 0;
