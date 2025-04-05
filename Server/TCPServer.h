@@ -10,7 +10,7 @@
 
 #pragma comment(lib, "Ws2_32.lib")
 
-const int PACKETSIZE = sizeof(Header) + sizeof(FlightData) + 4;
+const int PACKETSIZE = sizeof(Header) + sizeof(FlightData) + 4 + 2;
 
 struct FlightSnapshot {
 	TimeInfo time;

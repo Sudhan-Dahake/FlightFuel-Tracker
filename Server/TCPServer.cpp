@@ -99,6 +99,8 @@ void TCPServer::HandleClient(SOCKET clientSocket) {
 
 		std::cout << "Packet Received :)" << std::endl;
 
+		std::cout << "This is the received Size: " << recvSize << std::endl;
+
 		if (recvSize == 0) {
 			std::cout << "Client disconnected.\n";
 
@@ -106,7 +108,17 @@ void TCPServer::HandleClient(SOCKET clientSocket) {
 		}
 
 		if (recvSize < 0) {
-			std::cout << "Receive error.\n";
+			int err = WSAGetLastError();
+
+			std::cout << "Received error. Code: " << err << std::endl;
+
+			if (err == WSAEWOULDBLOCK || err == WSAEINTR) {
+				// Non-fatal. We are going to wait and retry.
+				continue;
+			}
+
+			// Fatal error — disconnecting this client. This is for other errors.
+			break;
 		}
 
 		this->HandlePacket(clientSocket, RxBuffer, isClientDisconnected);

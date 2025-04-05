@@ -15,7 +15,7 @@ Packet::Packet(char* src) {
 
 	memset(&(this->flightData), 0, sizeof(FlightData));
 
-	this->CRC = this->CalculateCRC();
+	/*this->CRC = this->CalculateCRC();*/
 
 	memcpy(&(this->Head), src, sizeof(Header));
 

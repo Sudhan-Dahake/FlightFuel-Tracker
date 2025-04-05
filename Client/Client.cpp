@@ -46,7 +46,7 @@ int main(int argc, char* argv[])
     sockaddr_in SvrAddr;
     SvrAddr.sin_family = AF_INET;						//Address family type itnernet
     SvrAddr.sin_port = htons(27000);					//port (host to network conversion)
-    SvrAddr.sin_addr.s_addr = inet_addr("10.144.106.133");	//IP address
+    SvrAddr.sin_addr.s_addr = inet_addr("127.0.0.1");	//IP address
 
 
     if ((connect(ClientSocket, (struct sockaddr*)&SvrAddr, sizeof(SvrAddr))) == SOCKET_ERROR)
@@ -102,8 +102,11 @@ int main(int argc, char* argv[])
 
             //std::cout << "printing serialized packet " << *Tx << std::endl;
 
+            int sendSize = send(ClientSocket, Tx, Size, 0);
 
-            if (send(ClientSocket, Tx, Size, 0) < 0)
+            /*std::cout << "This is the Send Size in Client: " << sendSize << std::endl;*/
+
+            if (sendSize < 0)
             {
                 std::cerr << "Error in sending the packet to server." << std::endl;
                 closesocket(ClientSocket);
@@ -118,17 +121,17 @@ int main(int argc, char* argv[])
         }
 
 
-        char finishFlag;
-
-        FlightData flightData;
-
-        Packet packetToSend = PreparePacket(flightId, confirmation, finishFlag = 'D', &flightData, 0);
+        Packet packetToSend = PreparePacket(flightId, confirmation, 'D', nullptr, 0);
 
 
         int Size = 0;
         char* Tx = packetToSend.SerializeData(Size);
 
-        if (send(ClientSocket, Tx, Size, 0) < 0)
+        int sendSizeFinish = send(ClientSocket, Tx, Size, 0);
+
+        /*std::cout << "This is the Send Size in Client for Finish Packet: " << sendSizeFinish << std::endl;*/
+
+        if (sendSizeFinish < 0)
         {
             std::cerr << "Error in sending the packet to server." << std::endl;
             closesocket(ClientSocket);
