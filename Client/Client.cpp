@@ -102,8 +102,11 @@ int main(int argc, char* argv[])
 
             //std::cout << "printing serialized packet " << *Tx << std::endl;
 
+            int sendSize = send(ClientSocket, Tx, Size, 0);
 
-            if (send(ClientSocket, Tx, Size, 0) < 0)
+            /*std::cout << "This is the Send Size in Client: " << sendSize << std::endl;*/
+
+            if (sendSize < 0)
             {
                 std::cerr << "Error in sending the packet to server." << std::endl;
                 closesocket(ClientSocket);
@@ -118,17 +121,17 @@ int main(int argc, char* argv[])
         }
 
 
-        char finishFlag;
-
-        FlightData flightData;
-
-        Packet packetToSend = PreparePacket(flightId,  finishFlag = 'D', &flightData, 0);
+        Packet packetToSend = PreparePacket(flightId, 'D', nullptr, 0);
 
 
         int Size = 0;
         char* Tx = packetToSend.SerializeData(Size);
 
-        if (send(ClientSocket, Tx, Size, 0) < 0)
+        int sendSizeFinish = send(ClientSocket, Tx, Size, 0);
+
+        /*std::cout << "This is the Send Size in Client for Finish Packet: " << sendSizeFinish << std::endl;*/
+
+        if (sendSizeFinish < 0)
         {
             std::cerr << "Error in sending the packet to server." << std::endl;
             closesocket(ClientSocket);

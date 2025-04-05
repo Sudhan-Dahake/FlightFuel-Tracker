@@ -6,11 +6,13 @@
 #include <windows.networking.sockets.h>
 #include <fstream>
 #include <unordered_map>
+#include <shared_mutex>
+#include <thread>
 #include "Packet.h"
 
 #pragma comment(lib, "Ws2_32.lib")
 
-const int PACKETSIZE = sizeof(Header) + sizeof(FlightData) + 4;
+const int PACKETSIZE = sizeof(Header) + sizeof(FlightData);
 
 struct FlightSnapshot {
 	int time;
@@ -22,19 +24,25 @@ class TCPServer {
 
 	sockaddr_in SvrAddr;
 
-	boost::asio::thread_pool threadPool;
+	std::thread flusherThread;
 
-	std::mutex mutex;
+	std::atomic<bool> serverRunning;
+
+	boost::asio::thread_pool threadPool;
 
 	std::unordered_map<int, FlightSnapshot>* previousData;
 
-	std::mutex data_mutex;
-
 	std::unordered_map<int, std::vector<float>>* flightConsumptions;
 
-	std::mutex sendMutex;
-
 	std::mutex fileMutex;
+
+	std::shared_mutex previousDataSharedMutex;
+
+	std::shared_mutex flightConsumptionsSharedMutex;
+
+	std::vector<std::pair<int, float>> avgBufferForFileWriting;
+
+	std::mutex avgBufferForFileWritingMutex;
 
 	int port;
 
@@ -50,7 +58,9 @@ public:
 
 	void HandlePacket(SOCKET clientSocket, char* Rxbuffer, bool& isClientDisconnected);
 
-	int ConvertToSeconds(const TimeInfo& t);
+	/*int ConvertToSeconds(const TimeInfo& t);*/
 
 	float ComputeFuelConsumption(const int& prevTime, float prevFuel, const int& currTime, float currFuel);
+
+	void BackgroundFlusherForFile();
 };

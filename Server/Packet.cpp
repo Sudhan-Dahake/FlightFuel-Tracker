@@ -44,15 +44,6 @@ char* Packet::SerializeData(int& TotalSize) {
 	return this->TxBuffer;
 };
 
-//Header Packet::SendConfirmation(int flightId){ //, char confirmationFlag) {
-//	//this->Head.confirmationFlag = confirmationFlag;
-//	this->Head.finishedFlag = 'N';
-//	this->Head.flightID = flightId;
-//	this->Head.Length = 0;
-//
-//	return this->Head;
-//};
-
 int Packet::GetFlightId() {
 	return this->Head.flightID;
 };

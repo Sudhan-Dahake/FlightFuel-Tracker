@@ -49,10 +49,19 @@ TCPServer::TCPServer(int port, int threadPoolSize)
 	this->previousData = new std::unordered_map<int, FlightSnapshot>();
 
 	this->flightConsumptions = new std::unordered_map<int, std::vector<float>>();
+
+	this->serverRunning.store(true);
 };
 
 
 TCPServer::~TCPServer() {
+	this->serverRunning.store(false);
+
+	if (this->flusherThread.joinable()) {
+		this->flusherThread.join();
+	};
+
+
 	closesocket(this->ServerSocket);
 
 	delete this->previousData;
@@ -66,6 +75,9 @@ TCPServer::~TCPServer() {
 
 
 void TCPServer::Start() {
+	// Starting the background flusher thread for file I/O.
+	this->flusherThread = std::thread(&TCPServer::BackgroundFlusherForFile, this);
+
 	while (true) {
 		std::cout << "TCP Server ready\n";
 
@@ -82,9 +94,80 @@ void TCPServer::Start() {
 		// Offload to thread pool
 		boost::asio::post(threadPool, [this, clientSocket]() {
 			this->HandleClient(clientSocket);
-			});
+		});
 	};
 };
+
+
+// *************** OPTIMIZATION 2 STARTS HERE ****************
+
+void TCPServer::BackgroundFlusherForFile() {
+	const int FLUSH_THRESHOLD = 20;
+
+	const std::chrono::seconds FLUSH_INTERVAL(2);
+
+	auto lastFlushTime = std::chrono::steady_clock::now();
+
+	while (this->serverRunning.load()) {
+		std::this_thread::sleep_for(std::chrono::seconds(1));
+
+		std::vector<std::pair<int, float>> toFlush;
+
+		auto now = std::chrono::steady_clock::now();
+
+		{
+			std::lock_guard<std::mutex> lock(this->avgBufferForFileWritingMutex);
+
+			if ((this->avgBufferForFileWriting.size() >= FLUSH_THRESHOLD) || ((now - lastFlushTime) >= FLUSH_INTERVAL)) {
+				toFlush.swap(this->avgBufferForFileWriting);
+			};
+		}
+
+
+		if (!toFlush.empty()) {
+			std::string filename = "Avg_Fuel_Consumption_In_Flights.txt";
+
+			std::ofstream outFile;
+
+			std::ifstream checkFile(filename);
+
+			bool fileExists = checkFile.good();
+
+			checkFile.close();
+
+			outFile.open(filename, std::ios::app);
+
+			if (!fileExists) {
+				outFile << "FlightId\tAverage Fuel Consumption\n";
+			};
+
+			for (const auto& [flightID, avg] : toFlush) {
+				outFile << flightID << "\t" << avg << "\n";
+			};
+
+
+			outFile.close();
+		};
+	};
+
+
+	// Final Flush on shutdown.
+	if (!this->avgBufferForFileWriting.empty()) {
+		std::lock_guard<std::mutex> lock(avgBufferForFileWritingMutex);
+
+		std::ofstream outFile("Avg_Fuel_Consumption_In_Flights.txt", std::ios::app);
+
+		for (const auto& [flightID, avg] : this->avgBufferForFileWriting) {
+			outFile << "FlightId\tAverage Fuel Consumption\n";
+		};
+
+		this->avgBufferForFileWriting.clear();
+	};
+};
+
+
+// *************** OPTIMIZATION 2 ENDS HERE ****************
+
 
 
 void TCPServer::HandleClient(SOCKET clientSocket) {
@@ -101,6 +184,8 @@ void TCPServer::HandleClient(SOCKET clientSocket) {
 
 		//std::cout << "Packet Received :)" << std::endl;
 
+		std::cout << "This is the received Size: " << recvSize << std::endl;
+
 		if (recvSize == 0) {
 			std::cout << "Client disconnected.\n";
 
@@ -108,7 +193,17 @@ void TCPServer::HandleClient(SOCKET clientSocket) {
 		}
 
 		if (recvSize < 0) {
-			std::cout << "Receive error.\n";
+			int err = WSAGetLastError();
+
+			std::cout << "Received error. Code: " << err << std::endl;
+
+			if (err == WSAEWOULDBLOCK || err == WSAEINTR) {
+				// Non-fatal. We are going to wait and retry.
+				continue;
+			}
+
+			// Fatal error — disconnecting this client. This is for other errors.
+			break;
 		}
 
 		this->HandlePacket(clientSocket, RxBuffer, isClientDisconnected);
@@ -126,7 +221,11 @@ void TCPServer::HandleClient(SOCKET clientSocket) {
 void TCPServer::HandlePacket(SOCKET clientSocket, char* RxBuffer, bool& isClientDisconnected) {
 	Packet pkt(RxBuffer);
 
+	std::cout << "Here" << std::endl;
+
 	if (pkt.IsBodyPresent()) {
+		std::cout << "Body is present!!" << std::endl;
+
 		Header head = pkt.GetHeader();
 
 		FlightData flightData = pkt.GetFlightData();
@@ -139,58 +238,127 @@ void TCPServer::HandlePacket(SOCKET clientSocket, char* RxBuffer, bool& isClient
 
 		float consumption = 0.0f;
 
+		bool hasPrevData = false;
+
+		int prevTime;
+
+		float prevFuel;
+
+		// ********* OPTIMIZATION 1 STARTS HERE *****************
+
+
+		// Shared lock is used so that many threads can read at the same time when there is no active writer.
 		{
-			std::lock_guard<std::mutex> lock(data_mutex);
+			std::shared_lock<std::shared_mutex> lock(this->previousDataSharedMutex);
 
 			auto it = this->previousData->find(flightID);
 
 			if (it != this->previousData->end()) {
-				int prevTime = it->second.time;
+				prevTime = it->second.time;
 
-				float prevFuel = it->second.fuel;
+				prevFuel = it->second.fuel;
 
-				consumption = this->ComputeFuelConsumption(prevTime, prevFuel, currTime, currFuel);
-
-				if (consumption > 0.0f) {
-					(*this->flightConsumptions)[flightID].push_back(consumption);
-				}
+				hasPrevData = true;
 			}
+		}
+
+
+		if (hasPrevData) {
+			std::cout << "Has prev Data" << std::endl;
+
+			consumption = this->ComputeFuelConsumption(prevTime, prevFuel, currTime, currFuel);
+
+			if (consumption > 0.0f) {
+
+				// lock_guard makes sure the lock is freed even if an exception occurs.
+				// only one thread can update the FlightConsumptions Data structure.
+				std::unique_lock<std::shared_mutex> lock(this->flightConsumptionsSharedMutex);
+
+				(*this->flightConsumptions)[flightID].push_back(consumption);
+			}
+		}
+
+
+		// Unique_lock ensures only one writer has the lock and there are no reader when there is a writer.
+		{
+			std::unique_lock<std::shared_mutex> lock(this->previousDataSharedMutex);
+
 			(*this->previousData)[flightID] = { currTime, currFuel };
 		}
+
+
+		// ********* OPTIMIZATION 1 ENDS HERE *****************
 	}
 
-	else if (pkt.GetHeader().finishedFlag == 'D') {
-		const std::vector<float>& fuelConsumptionRates = (*this->flightConsumptions)[pkt.GetHeader().flightID];
+	else if (pkt.IsFinishedFlagSet()) {
+		std::cout << "Finished Flag is Set" << std::endl;
+
+		std::vector<float> fuelConsumptionRates;
+
+		{
+			std::shared_lock<std::shared_mutex> lock(this->flightConsumptionsSharedMutex);
+
+			std::unordered_map<int, std::vector<float>>::const_iterator it = this->flightConsumptions->find(pkt.GetHeader().flightID);
+
+			if (it != this->flightConsumptions->end()) {
+				fuelConsumptionRates = it->second;
+			};
+		}
 
 		if (!fuelConsumptionRates.empty()) {
 			float sum = 0.0f;
+
 			for (float rate : fuelConsumptionRates) {
 				sum += rate;
 			}
 
 			float avg = sum / fuelConsumptionRates.size();
-			std::string filename = "Avg_Fuel_Consumption_In_Flights.txt";
+
+
+			// *************** OPTIMIZATION 2 STARTS HERE ****************
+
+
+			{
+				std::lock_guard<std::mutex> lock(this->avgBufferForFileWritingMutex);
+
+				this->avgBufferForFileWriting.emplace_back(pkt.GetHeader().flightID, avg);
+			}
+
+
+
+			// *************** OPTIMIZATION 2 ENDS HERE *******************
+
+			/*std::string filename = "Avg_Fuel_Consumption_In_Flights.txt";
+
 			std::ofstream outFile;
 
 			{
 				std::lock_guard<std::mutex> lock(fileMutex);
+
 				std::ifstream checkFile(filename);
+
 				bool fileExists = checkFile.good();
+
 				checkFile.close();
 
 				outFile.open(filename, std::ios::app);
+
 				if (!fileExists) {
 					outFile << "FlightId\tAverage Fuel Consumption\n";
 				}
 
 				outFile << pkt.GetHeader().flightID << "\t" << avg << "\n";
+
 				outFile.close();
-			}
+			}*/
 		}
+
 		else {
 			std::cout << "Flight ID " << pkt.GetHeader().flightID << " completed, but not enough data to compute average.\n";
-		}
+		};
+		
 		std::cout << "Client completed\n";
+
 		isClientDisconnected = true;
 	}
 };
