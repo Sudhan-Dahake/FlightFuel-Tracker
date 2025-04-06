@@ -22,28 +22,6 @@ Packet::Packet(char* src) {
 	this->TxBuffer = nullptr;
 };
 
-char* Packet::SerializeData(int& TotalSize) {
-	if (this->TxBuffer) {
-		delete[] TxBuffer;
-
-		TxBuffer = nullptr;
-	};
-
-	int size = sizeof(Header) + this->Head.Length; // +sizeof(this->CRC);
-
-	this->TxBuffer = new char[size];
-
-	memset(this->TxBuffer, 0, size);
-
-	memcpy(this->TxBuffer, &(this->Head), sizeof(Header));
-
-	memcpy(this->TxBuffer + sizeof(Header), &(this->flightData), this->Head.Length);
-
-	TotalSize = size;
-
-	return this->TxBuffer;
-};
-
 int Packet::GetFlightId() {
 	return this->Head.flightID;
 };
