@@ -252,10 +252,10 @@ void TCPServer::HandleClient(SOCKET clientSocket) {
 			};
 
 
-			// This is where deserialization begins.
-			std::vector<char> singlePacket(packetBuffer.begin(), packetBuffer.begin() + fullPacketSize);
+			//// This is where deserialization begins.
+			//std::vector<char> singlePacket(packetBuffer.begin(), packetBuffer.begin() + fullPacketSize);
 
-			Packet pkt(singlePacket.data());
+			Packet pkt(packetBuffer.data());
 
 			flightID = pkt.GetFlightId();
 
