@@ -352,12 +352,6 @@ void TCPServer::HandlePacket(SOCKET clientSocket, Packet& pkt, bool& isClientDis
 
 
 void TCPServer::CalculateConsumptionAndAddToFileBuffer(unsigned int flightID) {
-	{
-		std::unique_lock<std::shared_mutex> lock(this->previousDataSharedMutex);
-
-		this->previousData->erase(flightID);
-	}
-
 	std::vector<float> fuelConsumptionRates;
 
 	{
@@ -370,11 +364,6 @@ void TCPServer::CalculateConsumptionAndAddToFileBuffer(unsigned int flightID) {
 		};
 	}
 
-	{
-		std::unique_lock<std::shared_mutex> lock(this->flightConsumptionsSharedMutex);
-
-		this->flightConsumptions->erase(flightID);
-	}
 
 	if (!fuelConsumptionRates.empty()) {
 		float sum = 0.0f;
