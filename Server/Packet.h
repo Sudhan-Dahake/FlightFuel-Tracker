@@ -40,10 +40,6 @@ public:
 
 	Packet(char* src); //deserialize
 
-	Header SendConfirmation(int flightId, char confirmationFlag);
-
-	char* SerializeData(int& TotalSize);
-
 	int GetFlightId();
 
 	Header GetHeader();

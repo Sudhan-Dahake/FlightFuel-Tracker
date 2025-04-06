@@ -180,40 +180,6 @@ void TCPServer::BackgroundFlusherForFile() {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 void TCPServer::HandleClient(SOCKET clientSocket) {
 	int recvSize = -1;
 
@@ -300,54 +266,6 @@ void TCPServer::HandleClient(SOCKET clientSocket) {
 		};
 	};
 
-
-
-
-
-
-	//while (!isClientDisconnected) {
-	//	recvSize = recv(clientSocket, RxBuffer, PACKETSIZE, 0);
-
-	//	if (recvSize == 0) {
-	//		if (flightID != 0) {
-	//			std::cout << "Flight ID: " << flightID << ", Client successfully disconnected.\n";
-
-	//			this->CalculateConsumptionAndAddToFileBuffer(flightID);
-	//		}
-
-	//		else {
-	//			std::cout << "Flight ID: " << flightID << ", Client disconnected without sending any data.\n";
-	//		}
-
-	//		break;
-	//	};
-
-	//	if (recvSize < 0) {
-	//		int err = WSAGetLastError();
-
-	//		std::cout << "Received error. Code: " << err << std::endl;
-
-	//		if (err == WSAEWOULDBLOCK || err == WSAEINTR) {
-	//			// Non-fatal. We are going to wait and retry.
-	//			continue;
-	//		}
-
-	//		// Fatal error — disconnecting this client. This is for other errors.
-	//		break;
-	//	};
-
-	//	if (recvSize > 0) {
-	//		Packet pkt(RxBuffer);
-
-	//		flightID = pkt.GetFlightId();
-
-	//		this->HandlePacket(clientSocket, pkt, isClientDisconnected);
-	//	};
-	//}
-
-	/*delete[] RxBuffer;
-	RxBuffer = nullptr;*/
-
 	closesocket(clientSocket);
 }
 
@@ -420,74 +338,6 @@ void TCPServer::HandlePacket(SOCKET clientSocket, Packet& pkt, bool& isClientDis
 
 	else if (pkt.IsFinishedFlagSet()) {
 		this->CalculateConsumptionAndAddToFileBuffer(pkt.GetFlightId());
-
-
-		//std::this_thread::sleep_for(std::chrono::milliseconds(500));
-
-
-		//std::vector<float> fuelConsumptionRates;
-
-		//{
-		//	std::shared_lock<std::shared_mutex> lock(this->flightConsumptionsSharedMutex);
-
-		//	std::unordered_map<int, std::vector<float>>::const_iterator it = this->flightConsumptions->find(pkt.GetHeader().flightID);
-
-		//	if (it != this->flightConsumptions->end()) {
-		//		fuelConsumptionRates = it->second;
-		//	};
-		//}
-
-		//if (!fuelConsumptionRates.empty()) {
-		//	float sum = 0.0f;
-
-		//	for (float rate : fuelConsumptionRates) {
-		//		sum += rate;
-		//	}
-
-		//	float avg = sum / fuelConsumptionRates.size();
-
-
-		//	// *************** OPTIMIZATION 2 STARTS HERE ****************
-
-
-		//	{
-		//		std::lock_guard<std::mutex> lock(this->avgBufferForFileWritingMutex);
-
-		//		this->avgBufferForFileWriting.emplace_back(pkt.GetHeader().flightID, avg);
-		//	}
-
-
-
-		//	// *************** OPTIMIZATION 2 ENDS HERE *******************
-
-		//	/*std::string filename = "Avg_Fuel_Consumption_In_Flights.txt";
-
-		//	std::ofstream outFile;
-
-		//	{
-		//		std::lock_guard<std::mutex> lock(fileMutex);
-
-		//		std::ifstream checkFile(filename);
-
-		//		bool fileExists = checkFile.good();
-
-		//		checkFile.close();
-
-		//		outFile.open(filename, std::ios::app);
-
-		//		if (!fileExists) {
-		//			outFile << "FlightId\tAverage Fuel Consumption\n";
-		//		}
-
-		//		outFile << pkt.GetHeader().flightID << "\t" << avg << "\n";
-
-		//		outFile.close();
-		//	}*/
-		//}
-
-		//else {
-		//	std::cout << "Flight ID " << pkt.GetHeader().flightID << " completed, but not enough data to compute average.\n";
-		//};
 		
 		std::cout << "Client completed\n";
 
@@ -502,6 +352,12 @@ void TCPServer::HandlePacket(SOCKET clientSocket, Packet& pkt, bool& isClientDis
 
 
 void TCPServer::CalculateConsumptionAndAddToFileBuffer(unsigned int flightID) {
+	{
+		std::unique_lock<std::shared_mutex> lock(this->previousDataSharedMutex);
+
+		this->previousData->erase(flightID);
+	}
+
 	std::vector<float> fuelConsumptionRates;
 
 	{
@@ -512,6 +368,12 @@ void TCPServer::CalculateConsumptionAndAddToFileBuffer(unsigned int flightID) {
 		if (it != this->flightConsumptions->end()) {
 			fuelConsumptionRates = it->second;
 		};
+	}
+
+	{
+		std::unique_lock<std::shared_mutex> lock(this->flightConsumptionsSharedMutex);
+
+		this->flightConsumptions->erase(flightID);
 	}
 
 	if (!fuelConsumptionRates.empty()) {
@@ -534,32 +396,7 @@ void TCPServer::CalculateConsumptionAndAddToFileBuffer(unsigned int flightID) {
 		}
 
 
-
 		// *************** OPTIMIZATION 2 ENDS HERE *******************
-
-		/*std::string filename = "Avg_Fuel_Consumption_In_Flights.txt";
-
-		std::ofstream outFile;
-
-		{
-			std::lock_guard<std::mutex> lock(fileMutex);
-
-			std::ifstream checkFile(filename);
-
-			bool fileExists = checkFile.good();
-
-			checkFile.close();
-
-			outFile.open(filename, std::ios::app);
-
-			if (!fileExists) {
-				outFile << "FlightId\tAverage Fuel Consumption\n";
-			}
-
-			outFile << pkt.GetHeader().flightID << "\t" << avg << "\n";
-
-			outFile.close();
-		}*/
 	}
 
 	else {
