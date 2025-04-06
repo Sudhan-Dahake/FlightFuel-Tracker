@@ -56,11 +56,15 @@ public:
 
 	void HandleClient(SOCKET clientSocket);
 
-	void HandlePacket(SOCKET clientSocket, char* Rxbuffer, bool& isClientDisconnected);
+	void HandlePacket(SOCKET clientSocket, Packet& pkt, bool& isClientDisconnected);
+
+	void CalculateConsumptionAndAddToFileBuffer(unsigned int flightID);
 
 	/*int ConvertToSeconds(const TimeInfo& t);*/
 
 	float ComputeFuelConsumption(const int& prevTime, float prevFuel, const int& currTime, float currFuel);
 
 	void BackgroundFlusherForFile();
+
+	void JoinThreadPool();
 };
