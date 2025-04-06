@@ -90,30 +90,67 @@ void TCPServer::HandleClient(SOCKET clientSocket) {
 
 	bool isClientDisconnected = false;
 
-	char* RxBuffer = new char[PACKETSIZE];
+	unsigned int flightID = 0;
 
-	memset(RxBuffer, 0, PACKETSIZE);
+	std::vector<char> buffer(4096);
+
+	std::vector<char> packetBuffer;
 
 	while (!isClientDisconnected) {
-		recvSize = recv(clientSocket, RxBuffer, PACKETSIZE, 0);
+		recvSize = recv(clientSocket, buffer.data(), buffer.size(), 0);
 
 		std::cout << "Packet Received :)" << std::endl;
 
 		if (recvSize == 0) {
-			std::cout << "Client disconnected.\n";
+			if (flightID != 0) {
+				std::cout << "Client successfully disconnected.\n";
+
+				this->CalculateConsumptionAndAddToFile(flightID);
+			}
+
+			else {
+				std::cout << "Client disconnected without sending any data.\n";
+			}
 
 			break;
 		}
 
 		if (recvSize < 0) {
 			std::cout << "Receive error.\n";
+
+			break;
 		}
 
-		this->HandlePacket(clientSocket, RxBuffer, isClientDisconnected);
-	}
 
-	delete[] RxBuffer;
-	RxBuffer = nullptr;
+		packetBuffer.insert(packetBuffer.end(), buffer.begin(), buffer.begin() + recvSize);
+
+		while (true) {
+			if (packetBuffer.size() < sizeof(Header)) {
+				break;
+			};
+
+			Header head;
+
+			memcpy(&head, packetBuffer.data(), sizeof(Header));
+
+			int fullPacketSize = sizeof(Header) + head.Length;
+
+
+			if (packetBuffer.size() < fullPacketSize) {
+				break;
+			};
+
+
+
+			Packet pkt(packetBuffer.data());
+
+			flightID = pkt.GetFlightId();
+
+			this->HandlePacket(clientSocket, pkt, isClientDisconnected);
+		}
+
+		
+	}
 
 	closesocket(clientSocket);
 }
@@ -121,9 +158,7 @@ void TCPServer::HandleClient(SOCKET clientSocket) {
 
 
 
-void TCPServer::HandlePacket(SOCKET clientSocket, char* RxBuffer, bool& isClientDisconnected) {
-	Packet pkt(RxBuffer);
-
+void TCPServer::HandlePacket(SOCKET clientSocket, Packet& pkt, bool& isClientDisconnected) {
 	if (pkt.IsBodyPresent()) {
 		Header head = pkt.GetHeader();
 
@@ -158,38 +193,43 @@ void TCPServer::HandlePacket(SOCKET clientSocket, char* RxBuffer, bool& isClient
 	}
 
 	else if (pkt.GetHeader().finishedFlag == 'D') {
-		const std::vector<float>& fuelConsumptionRates = (*this->flightConsumptions)[pkt.GetHeader().flightID];
-
-		if (!fuelConsumptionRates.empty()) {
-			float sum = 0.0f;
-			for (float rate : fuelConsumptionRates) {
-				sum += rate;
-			}
-
-			float avg = sum / fuelConsumptionRates.size();
-			std::string filename = "Avg_Fuel_Consumption_In_Flights.txt";
-			std::ofstream outFile;
-
-			{
-				std::lock_guard<std::mutex> lock(fileMutex);
-				std::ifstream checkFile(filename);
-				bool fileExists = checkFile.good();
-				checkFile.close();
-
-				outFile.open(filename, std::ios::app);
-				if (!fileExists) {
-					outFile << "FlightId\tAverage Fuel Consumption\n";
-				}
-
-				outFile << pkt.GetHeader().flightID << "\t" << avg << "\n";
-				outFile.close();
-			}
-		}
-		else {
-			std::cout << "Flight ID " << pkt.GetHeader().flightID << " completed, but not enough data to compute average.\n";
-		}
+		this->CalculateConsumptionAndAddToFile(pkt.GetFlightId());
 
 		isClientDisconnected = true;
+	};
+};
+
+
+void TCPServer::CalculateConsumptionAndAddToFile(unsigned int flightID) {
+	const std::vector<float>& fuelConsumptionRates = (*this->flightConsumptions)[flightID];
+
+	if (!fuelConsumptionRates.empty()) {
+		float sum = 0.0f;
+		for (float rate : fuelConsumptionRates) {
+			sum += rate;
+		}
+
+		float avg = sum / fuelConsumptionRates.size();
+		std::string filename = "Avg_Fuel_Consumption_In_Flights.txt";
+		std::ofstream outFile;
+
+		{
+			std::lock_guard<std::mutex> lock(fileMutex);
+			std::ifstream checkFile(filename);
+			bool fileExists = checkFile.good();
+			checkFile.close();
+
+			outFile.open(filename, std::ios::app);
+			if (!fileExists) {
+				outFile << "FlightId\tAverage Fuel Consumption\n";
+			}
+
+			outFile << flightID << "\t" << avg << "\n";
+			outFile.close();
+		}
+	}
+	else {
+		std::cout << "Flight ID " << flightID << " completed, but not enough data to compute average.\n";
 	}
 };
 

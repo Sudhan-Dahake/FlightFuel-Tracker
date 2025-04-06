@@ -48,9 +48,11 @@ public:
 
 	void HandleClient(SOCKET clientSocket);
 
-	void HandlePacket(SOCKET clientSocket, char* Rxbuffer, bool& isClientDisconnected);
+	void HandlePacket(SOCKET clientSocket, Packet& pkt, bool& isClientDisconnected);
 
 	int ConvertToSeconds(const TimeInfo& t);
+
+	void CalculateConsumptionAndAddToFile(unsigned int flightID);
 
 	float ComputeFuelConsumption(const TimeInfo& prevTime, float prevFuel, const TimeInfo& currTime, float currFuel);
 };
