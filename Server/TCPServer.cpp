@@ -202,7 +202,34 @@ void TCPServer::HandleClient(SOCKET clientSocket) {
 
 			// Fatal error — disconnecting this client. This is for other errors.
 			break;
-		}
+		};
+
+
+
+		// Appending the new data.
+		packetBuffer.insert(packetBuffer.end(), buffer.begin(), buffer.begin() + recvSize);
+
+		// Here we try to extract complete packets.
+		while (true) {
+			if (packetBuffer.size() < sizeof(Header)) {
+				break;
+			};
+
+			Header head;
+
+			memcpy(&head, packetBuffer.data(), sizeof(Header));
+
+			int fullPacketSize = sizeof(Header) + head.Length;
+
+			// We wait until full packet has arrived in the block below.
+			if (packetBuffer.size() < fullPacketSize) {
+				break;
+			};
+
+
+			// This is where deserialization begins.
+
+			Packet pkt(packetBuffer.data());
 
 		this->HandlePacket(clientSocket, RxBuffer, isClientDisconnected);
 	}
