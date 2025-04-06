@@ -116,7 +116,13 @@ void TCPServer::HandleClient(SOCKET clientSocket) {
 		}
 
 		if (recvSize < 0) {
-			std::cout << "Receive error.\n";
+			int err = WSAGetLastError();
+
+			std::cout << "Receive error: " << err << std::endl;
+
+			if (err == WSAEWOULDBLOCK || err == WSAEINTR) {
+				continue;
+			};
 
 			break;
 		}
