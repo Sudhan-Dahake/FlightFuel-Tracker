@@ -147,6 +147,8 @@ void TCPServer::HandleClient(SOCKET clientSocket) {
 			flightID = pkt.GetFlightId();
 
 			this->HandlePacket(clientSocket, pkt, isClientDisconnected);
+
+			packetBuffer.erase(packetBuffer.begin(), packetBuffer.begin() + fullPacketSize);
 		}
 
 		
